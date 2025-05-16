@@ -11,7 +11,7 @@ class MaintenanceMode {
     public function init() {
         add_action('admin_menu', [$this, 'add_settings_page']);
         add_action('admin_init', [$this, 'register_settings']);
-        add_action('template_redirect', [$this, 'maybe_display_maintenance_page']);
+        add_action('template_redirect', [$this, 'maybe_display_maintenance_page'], 1);
         add_action('admin_notices', [$this, 'admin_notice']);
         add_action('admin_head', [$this, 'admin_header_style']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
@@ -37,19 +37,38 @@ class MaintenanceMode {
         register_setting('maintenance_mode_settings', 'mm_enabled', [
             'sanitize_callback' => 'absint',
             'default' => 0,
+            'show_in_rest' => true,
         ]);
         register_setting('maintenance_mode_settings', 'mm_logo_id', [
             'sanitize_callback' => 'absint',
             'default' => 0,
+            'show_in_rest' => true,
         ]);
         register_setting('maintenance_mode_settings', 'mm_headline', [
             'sanitize_callback' => 'sanitize_text_field',
             'default' => __('Site Maintenance', 'rokku-maintenance-mode'),
+            'show_in_rest' => true,
         ]);
         register_setting('maintenance_mode_settings', 'mm_message', [
             'sanitize_callback' => 'wp_kses_post',
             'default' => __('We are currently performing scheduled maintenance. We will be back online shortly!', 'rokku-maintenance-mode'),
+            'show_in_rest' => true,
         ]);
+
+        // Add settings update callback
+        add_action('update_option_mm_enabled', [$this, 'on_maintenance_mode_update'], 10, 3);
+    }
+
+    /**
+     * Callback when maintenance mode is updated
+     */
+    public function on_maintenance_mode_update($old_value, $value, $option) {
+        error_log('Maintenance mode updated:');
+        error_log('Old value: ' . ($old_value ? 'Enabled' : 'Disabled'));
+        error_log('New value: ' . ($value ? 'Enabled' : 'Disabled'));
+        
+        // Clear the transient
+        delete_transient('rokku_mm_status');
     }
 
     /**
@@ -138,7 +157,14 @@ class MaintenanceMode {
      * Display maintenance page if enabled
      */
     public function maybe_display_maintenance_page() {
+        // Debug information
+        error_log('Maintenance Mode Check:');
+        error_log('Is maintenance mode enabled: ' . ($this->is_maintenance_mode_enabled() ? 'Yes' : 'No'));
+        error_log('Current user can manage options: ' . (current_user_can('manage_options') ? 'Yes' : 'No'));
+        error_log('Current user ID: ' . get_current_user_id());
+
         if (!current_user_can('manage_options') && $this->is_maintenance_mode_enabled()) {
+            error_log('Displaying maintenance page');
             status_header(503);
             nocache_headers();
             
@@ -229,10 +255,14 @@ class MaintenanceMode {
      * Uses transient for better performance
      */
     private function is_maintenance_mode_enabled() {
+        // Force clear transient for testing
+        delete_transient('rokku_mm_status');
+        
         $status = get_transient('rokku_mm_status');
         
         if (false === $status) {
             $status = (bool) get_option('mm_enabled');
+            error_log('Maintenance mode status from database: ' . ($status ? 'Enabled' : 'Disabled'));
             set_transient('rokku_mm_status', $status, HOUR_IN_SECONDS);
         }
         

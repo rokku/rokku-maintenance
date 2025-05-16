@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Rokku Maintenance Mode
  * Description: Enables a maintenance mode with customizable logo, headline, and message. Displays admin notice when active.
- * Version: 1.1
+ * Version: 1.2
  * Author: Mark Bridgeman
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('ROKKU_MM_VERSION', '1.1');
+define('ROKKU_MM_VERSION', '1.2');
 define('ROKKU_MM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ROKKU_MM_PLUGIN_URL', plugin_dir_url(__FILE__));
 

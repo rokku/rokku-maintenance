@@ -5,7 +5,7 @@ Tags: maintenance mode, coming soon, maintenance page, site offline, maintenance
 Requires at least: 6.7
 Tested up to: 6.8
 Requires PHP: 7.0
-Stable tag: 1.1
+Stable tag: 1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -52,6 +52,13 @@ Yes. The plugin returns a 503 Service Unavailable status code while active, whic
 
 == Changelog ==
 
+= 1.2 =
+* Fixed maintenance mode detection and display
+* Added proper template redirect priority
+* Improved settings handling and caching
+* Added REST API support for settings
+* Added debugging capabilities
+
 = 1.1 =
 * Added media uploader support for logo upload
 * Replaced checkbox with styled on/off toggle
@@ -59,8 +66,8 @@ Yes. The plugin returns a 503 Service Unavailable status code while active, whic
 
 == Upgrade Notice ==
 
-= 1.1 =
-Minor update. Added logo upload and cleaned admin UI.
+= 1.2 =
+Fixed maintenance mode detection and improved settings handling.
 
 == License ==
 
