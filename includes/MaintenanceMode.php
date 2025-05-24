@@ -15,6 +15,31 @@ class MaintenanceMode {
         add_action('admin_notices', [$this, 'admin_notice']);
         add_action('admin_head', [$this, 'admin_header_style']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+        
+        // Add REST API endpoints
+        add_action('rest_api_init', [$this, 'register_rest_routes']);
+    }
+
+    /**
+     * Register REST API routes
+     */
+    public function register_rest_routes() {
+        register_rest_route('rokku-mm/v1', '/status', [
+            'methods' => 'GET',
+            'callback' => [$this, 'get_maintenance_status'],
+            'permission_callback' => function() {
+                return current_user_can('manage_options');
+            }
+        ]);
+    }
+
+    /**
+     * Get maintenance mode status via REST API
+     */
+    public function get_maintenance_status() {
+        return rest_ensure_response([
+            'enabled' => $this->is_maintenance_mode_enabled()
+        ]);
     }
 
     /**
@@ -35,7 +60,7 @@ class MaintenanceMode {
      */
     public function register_settings() {
         register_setting('maintenance_mode_settings', 'mm_enabled', [
-            'sanitize_callback' => 'absint',
+            'sanitize_callback' => [$this, 'validate_maintenance_mode_toggle'],
             'default' => 0,
             'show_in_rest' => true,
         ]);
@@ -100,6 +125,7 @@ class MaintenanceMode {
                 <?php
                 settings_fields('maintenance_mode_settings');
                 do_settings_sections('maintenance_mode_settings');
+                wp_nonce_field('rokku_mm_settings', 'rokku_mm_nonce');
                 ?>
                 <table class="form-table">
                     <tr valign="top">
@@ -157,14 +183,14 @@ class MaintenanceMode {
      * Display maintenance page if enabled
      */
     public function maybe_display_maintenance_page() {
-        // Debug information
-        error_log('Maintenance Mode Check:');
-        error_log('Is maintenance mode enabled: ' . ($this->is_maintenance_mode_enabled() ? 'Yes' : 'No'));
-        error_log('Current user can manage options: ' . (current_user_can('manage_options') ? 'Yes' : 'No'));
-        error_log('Current user ID: ' . get_current_user_id());
-
         if (!current_user_can('manage_options') && $this->is_maintenance_mode_enabled()) {
-            error_log('Displaying maintenance page');
+            // Add security headers
+            header('X-Content-Type-Options: nosniff');
+            header('X-Frame-Options: DENY');
+            header('X-XSS-Protection: 1; mode=block');
+            header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;");
+            header('Referrer-Policy: strict-origin-when-cross-origin');
+            
             status_header(503);
             nocache_headers();
             
@@ -175,6 +201,9 @@ class MaintenanceMode {
             <head>
                 <meta charset="<?php bloginfo('charset'); ?>">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
+                <meta name="robots" content="noindex,nofollow">
+                <meta name="googlebot" content="noindex,nofollow">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
                 <title><?php echo esc_html(get_option('mm_headline')); ?></title>
                 <style>
                     body {
@@ -183,10 +212,16 @@ class MaintenanceMode {
                         padding: 50px;
                         line-height: 1.6;
                         color: #333;
+                        background: #f1f1f1;
+                        margin: 0;
                     }
                     .maintenance-container {
                         max-width: 600px;
                         margin: 0 auto;
+                        background: #fff;
+                        padding: 40px;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                     }
                     .maintenance-logo {
                         max-width: 200px;
@@ -196,9 +231,19 @@ class MaintenanceMode {
                     h1 {
                         font-size: 2em;
                         margin-bottom: 20px;
+                        color: #2c3338;
                     }
                     p {
                         margin-bottom: 15px;
+                        color: #50575e;
+                    }
+                    @media (max-width: 600px) {
+                        body {
+                            padding: 20px;
+                        }
+                        .maintenance-container {
+                            padding: 20px;
+                        }
                     }
                 </style>
             </head>
@@ -207,12 +252,14 @@ class MaintenanceMode {
                     <?php if ($logo_id) {
                         echo wp_get_attachment_image($logo_id, 'full', false, [
                             'class' => 'maintenance-logo',
+                            'loading' => 'eager',
                         ]);
                     }
                     ?>
                     <h1><?php echo esc_html(get_option('mm_headline')); ?></h1>
                     <?php echo wp_kses_post(wpautop(get_option('mm_message'))); ?>
                 </div>
+                <?php wp_no_robots(); ?>
             </body>
             </html>
             <?php
@@ -267,5 +314,36 @@ class MaintenanceMode {
         }
         
         return $status;
+    }
+
+    /**
+     * Validate maintenance mode toggle
+     */
+    public function validate_maintenance_mode_toggle($value) {
+        // Verify nonce
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'maintenance_mode_settings-options')) {
+            add_settings_error(
+                'mm_enabled',
+                'invalid_nonce',
+                __('Security check failed. Please try again.', 'rokku-maintenance-mode')
+            );
+            return get_option('mm_enabled');
+        }
+
+        // Rate limiting check
+        $last_toggle = get_transient('rokku_mm_last_toggle');
+        if ($last_toggle) {
+            add_settings_error(
+                'mm_enabled',
+                'rate_limit',
+                __('Please wait a few seconds before toggling maintenance mode again.', 'rokku-maintenance-mode')
+            );
+            return get_option('mm_enabled');
+        }
+
+        // Set rate limit
+        set_transient('rokku_mm_last_toggle', time(), 5); // 5 second cooldown
+
+        return absint($value);
     }
 } 

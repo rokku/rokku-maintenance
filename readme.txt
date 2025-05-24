@@ -5,7 +5,7 @@ Tags: maintenance mode, coming soon, maintenance page, site offline, maintenance
 Requires at least: 6.7
 Tested up to: 6.8
 Requires PHP: 7.0
-Stable tag: 1.2
+Stable tag: 1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -52,6 +52,18 @@ Yes. The plugin returns a 503 Service Unavailable status code while active, whic
 
 == Changelog ==
 
+= 1.3 =
+* Added comprehensive security improvements:
+  * Added nonce verification for maintenance mode toggle
+  * Implemented rate limiting for status changes
+  * Added security headers (CSP, X-Frame-Options, etc.)
+  * Enhanced maintenance page template security
+  * Added REST API endpoints with proper auth checks
+  * Improved error handling and validation
+  * Added responsive design improvements
+* Removed debug logging in production
+* Improved maintenance page styling and accessibility
+
 = 1.2 =
 * Fixed maintenance mode detection and display
 * Added proper template redirect priority
@@ -65,6 +77,9 @@ Yes. The plugin returns a 503 Service Unavailable status code while active, whic
 * Cleaned code for WordPress.org submission
 
 == Upgrade Notice ==
+
+= 1.3 =
+Important security update: Adds comprehensive security improvements and enhanced maintenance page features.
 
 = 1.2 =
 Fixed maintenance mode detection and improved settings handling.
