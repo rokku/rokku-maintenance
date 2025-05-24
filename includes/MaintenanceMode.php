@@ -88,10 +88,6 @@ class MaintenanceMode {
      * Callback when maintenance mode is updated
      */
     public function on_maintenance_mode_update($old_value, $value, $option) {
-        error_log('Maintenance mode updated:');
-        error_log('Old value: ' . ($old_value ? 'Enabled' : 'Disabled'));
-        error_log('New value: ' . ($value ? 'Enabled' : 'Disabled'));
-        
         // Clear the transient
         delete_transient('rokku_mm_status');
     }
@@ -259,7 +255,7 @@ class MaintenanceMode {
                     <h1><?php echo esc_html(get_option('mm_headline')); ?></h1>
                     <?php echo wp_kses_post(wpautop(get_option('mm_message'))); ?>
                 </div>
-                <?php wp_no_robots(); ?>
+                <?php wp_robots_no_robots(); ?>
             </body>
             </html>
             <?php
@@ -302,14 +298,10 @@ class MaintenanceMode {
      * Uses transient for better performance
      */
     private function is_maintenance_mode_enabled() {
-        // Force clear transient for testing
-        delete_transient('rokku_mm_status');
-        
         $status = get_transient('rokku_mm_status');
         
         if (false === $status) {
             $status = (bool) get_option('mm_enabled');
-            error_log('Maintenance mode status from database: ' . ($status ? 'Enabled' : 'Disabled'));
             set_transient('rokku_mm_status', $status, HOUR_IN_SECONDS);
         }
         
@@ -321,7 +313,8 @@ class MaintenanceMode {
      */
     public function validate_maintenance_mode_toggle($value) {
         // Verify nonce
-        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'maintenance_mode_settings-options')) {
+        $nonce = wp_unslash(filter_input(INPUT_POST, '_wpnonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        if (!$nonce || !wp_verify_nonce($nonce, 'maintenance_mode_settings-options')) {
             add_settings_error(
                 'mm_enabled',
                 'invalid_nonce',
