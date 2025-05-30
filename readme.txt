@@ -1,11 +1,11 @@
 === Rokku Maintenance Mode ===
-Contributors: markbridgeman
+Contributors: rokku
 Donate link: 
 Tags: maintenance mode, coming soon, maintenance page, site offline, maintenance
 Requires at least: 5.0
 Tested up to: 6.8
 Requires PHP: 7.2
-Stable tag: 1.3
+Stable tag: 1.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,15 @@ Yes. The plugin returns a 503 Service Unavailable status code while active, whic
 3. Admin bar turns red when active
 
 == Changelog ==
+
+= 1.4 =
+* Improved code organization and standards compliance:
+  * Updated all function names, options, and constants to use unique prefix
+  * Removed deprecated textdomain loading for WordPress 5.0+
+  * Properly enqueued all styles using WordPress functions
+  * Improved maintenance page template with proper wp_head/wp_footer
+  * Added version numbers to all assets for better caching
+  * Improved code organization and maintainability
 
 = 1.3 =
 * Added comprehensive security improvements:

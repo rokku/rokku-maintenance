@@ -5,10 +5,10 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 }
 
 // Delete plugin options
-delete_option('mm_enabled');
-delete_option('mm_logo_id');
-delete_option('mm_headline');
-delete_option('mm_message');
+delete_option('rokkmamo_enabled');
+delete_option('rokkmamo_logo_id');
+delete_option('rokkmamo_headline');
+delete_option('rokkmamo_message');
 
 // Delete transients
-delete_transient('rokku_mm_status'); 
+delete_transient('rokkmamo_status'); 

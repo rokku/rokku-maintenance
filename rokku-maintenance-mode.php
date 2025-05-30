@@ -18,14 +18,14 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('ROKKU_MM_VERSION', '1.3');
-define('ROKKU_MM_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('ROKKU_MM_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('ROKKMAMO_VERSION', '1.3');
+define('ROKKMAMO_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('ROKKMAMO_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 // Autoloader
 spl_autoload_register(function ($class) {
     $prefix = 'RokkuMaintenanceMode\\';
-    $base_dir = ROKKU_MM_PLUGIN_DIR . 'includes/';
+    $base_dir = ROKKMAMO_PLUGIN_DIR . 'includes/';
 
     $len = strlen($prefix);
     if (strncmp($prefix, $class, $len) !== 0) {
@@ -41,29 +41,26 @@ spl_autoload_register(function ($class) {
 });
 
 // Initialize the plugin
-function rokku_mm_init() {
-    // Load text domain
-    load_plugin_textdomain('rokku-maintenance-mode', false, dirname(plugin_basename(__FILE__)) . '/languages');
-    
+function rokkmamo_init() {
     // Initialize main plugin class
     $plugin = new \RokkuMaintenanceMode\MaintenanceMode();
     $plugin->init();
 }
-add_action('plugins_loaded', 'rokku_mm_init');
+add_action('plugins_loaded', 'rokkmamo_init');
 
 // Activation hook
 register_activation_hook(__FILE__, function() {
     // Add default options
-    add_option('mm_enabled', 0);
-    add_option('mm_headline', __('Site Maintenance', 'rokku-maintenance-mode'));
-    add_option('mm_message', __('We are currently performing scheduled maintenance. We will be back online shortly!', 'rokku-maintenance-mode'));
+    add_option('rokkmamo_enabled', 0);
+    add_option('rokkmamo_headline', __('Site Maintenance', 'rokku-maintenance-mode'));
+    add_option('rokkmamo_message', __('We are currently performing scheduled maintenance. We will be back online shortly!', 'rokku-maintenance-mode'));
     
     // Clear any existing caches
-    delete_transient('rokku_mm_status');
+    delete_transient('rokkmamo_status');
 });
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {
     // Clear any caches
-    delete_transient('rokku_mm_status');
+    delete_transient('rokkmamo_status');
 });
