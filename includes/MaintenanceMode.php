@@ -237,7 +237,7 @@ class MaintenanceMode {
                     <?php echo wp_kses_post(wpautop(get_option('rokkmamo_message'))); ?>
                 </div>
                 <?php 
-                wp_robots_no_robots();
+                wp_robots_no_robots([]);
                 wp_footer(); 
                 ?>
             </body>
